@@ -4,7 +4,7 @@ import kotlinx.serialization.Optional
 import kotlinx.serialization.SerialId
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import javax.xml.bind.DatatypeConverter
+import java.text.SimpleDateFormat
 
 @Serializable
 data class RestaurantsServiceResult(
@@ -23,6 +23,8 @@ data class Restaurant(
 data class DishesServiceResult(
     @SerialId(1) @Optional val dishes: List<Dish> = emptyList()
 )
+
+private val iso8601 = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
 @Serializable
 data class Dish(
@@ -48,7 +50,7 @@ data class Dish(
     @SerialId(20) val thumbnailImageUrl: String?
 ) {
   @Transient
-  val date by lazy { DatatypeConverter.parseDateTime(dateStr) }
+  val date by lazy { iso8601.parse(dateStr) }
 }
 
 enum class PriceType {
