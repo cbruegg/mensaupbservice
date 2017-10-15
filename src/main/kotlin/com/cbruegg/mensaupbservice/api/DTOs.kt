@@ -43,7 +43,7 @@ data class Dish(
     @SerialId(13) val guestPrice: Double,
     @SerialId(14) @Optional val allergens: List<String> = emptyList(),
     @SerialId(15) val orderInfo: Int,
-    @SerialId(16) val badges: List<Badge>,
+    @SerialId(16) @Optional val badges: List<Badge>,
     @SerialId(17) val restaurantId: String,
     @SerialId(18) val priceType: PriceType,
     @SerialId(19) val imageUrl: String?,
