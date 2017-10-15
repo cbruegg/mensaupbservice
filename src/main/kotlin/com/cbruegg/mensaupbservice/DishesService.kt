@@ -3,6 +3,7 @@ package com.cbruegg.mensaupbservice
 import com.cbruegg.mensaupbservice.api.Badge
 import com.cbruegg.mensaupbservice.api.Dish
 import com.cbruegg.mensaupbservice.api.DishesServiceResult
+import com.cbruegg.mensaupbservice.api.iso8601
 import com.squareup.moshi.Json
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.withTimeoutOrNull
@@ -11,8 +12,6 @@ import okhttp3.Request
 import org.jetbrains.ktor.http.ContentType
 import org.jetbrains.ktor.http.HttpStatusCode
 import java.io.IOException
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 suspend fun getDishes(apiId: String, restaurantId: String, date: Date): HttpResponseData {
@@ -35,8 +34,6 @@ private fun downloadDishesAsync(restaurantId: String, date: Date, apiId: String)
     jsonDishes.map { it.toDish() }
   } ?: throw IOException("Network timeout!")
 }
-
-private val dateFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.of("UTC"))
 
 /**
  * Model representing a dish object returned by the API.
@@ -67,7 +64,7 @@ private data class JsonDish(
   val badges by lazy { badgesStrings?.mapNotNull { Badge.findById(it) } ?: emptyList() }
 
   fun toDish() = Dish(
-      dateFormatter.format(date.toInstant()), nameDE, nameEN,
+      iso8601.format(date), nameDE, nameEN,
       descriptionDE, descriptionEN, category, categoryDE, categoryEN,
       subcategoryDE, subcategoryEN, studentPrice, workerPrice, guestPrice, allergens, orderInfo,
       badges, restaurantId, priceType.toApiPriceType(), imageUrl, thumbnailImageUrl

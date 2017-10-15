@@ -24,7 +24,7 @@ data class DishesServiceResult(
     @SerialId(1) @Optional val dishes: List<Dish> = emptyList()
 )
 
-private val iso8601 = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+internal val iso8601 = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
 @Serializable
 data class Dish(
