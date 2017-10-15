@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR=/home/root/chris/mensaupbservice
+DIR=/root/chris/mensaupbservice
 
 cd $DIR
 
