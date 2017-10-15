@@ -1,5 +1,5 @@
 #!/bin/bash
 
-DIR=/root/chris/mensaupbservice
+DIR=/usr/local/java_apps/mensaupbservice
 
 kill $(cat $DIR/server.pid)
