@@ -15,23 +15,23 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 
-fun baseUrl(apiId: String) = "http://www.studierendenwerk-pb.de/fileadmin/shareddata/access2.php?id=$apiId"
+// URLs
+
+private fun baseUrl(apiId: String) = "http://www.studierendenwerk-pb.de/fileadmin/shareddata/access2.php?id=$apiId"
 fun restaurantsUrl(apiId: String) = "${baseUrl(apiId)}&getrestaurants=1"
-/**
- * Generate the URL used for retrieving dishes of a restaurant at a specific date.
- */
 fun dishesUrl(restaurantId: String, date: Date, apiId: String): String {
   val dateFormat = SimpleDateFormat("yyyy-MM-dd")
   return "${baseUrl(apiId)}&date=${dateFormat.format(date)}&restaurant=$restaurantId"
 }
 
-const val TIMEOUT_MS = 10_000L
+// Network utilities
 
 typealias IOEither<T> = Either<IOException, T>
 
+const val TIMEOUT_MS = 10_000L
 val httpClient = OkHttpClient()
-val IOPool = Executors.newCachedThreadPool().asCoroutineDispatcher()
 
+private val IOPool = Executors.newCachedThreadPool().asCoroutineDispatcher()
 /**
  * Perform the action with the [dispatcher] and wrap it in [eitherTryIo].
  */
@@ -46,7 +46,7 @@ fun <T : Any> networkAsync(dispatcher: CoroutineDispatcher = IOPool, f: suspend 
  * Return either the desired result on the [Either.Right] side
  * or a caught [IOException] on the [Either.Left] side.
  */
-inline fun <T : Any> eitherTryIo(f: () -> T): Either<IOException, T> =
+private inline fun <T : Any> eitherTryIo(f: () -> T): Either<IOException, T> =
     try {
       Either.Right(f())
     } catch (e: IOException) {

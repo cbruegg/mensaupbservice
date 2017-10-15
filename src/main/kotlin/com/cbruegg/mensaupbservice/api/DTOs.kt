@@ -24,7 +24,7 @@ data class DishesServiceResult(
     @SerialId(1) @Optional val dishes: List<Dish> = emptyList()
 )
 
-internal val iso8601 = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+val iso8601Format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
 
 @Serializable
 data class Dish(
@@ -50,7 +50,7 @@ data class Dish(
     @SerialId(20) val thumbnailImageUrl: String?
 ) {
   @Transient
-  val date by lazy { iso8601.parse(dateStr) }
+  val date by lazy { iso8601Format.parse(dateStr) }
 }
 
 enum class PriceType {

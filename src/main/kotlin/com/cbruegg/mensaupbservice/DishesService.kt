@@ -1,9 +1,6 @@
 package com.cbruegg.mensaupbservice
 
-import com.cbruegg.mensaupbservice.api.Badge
-import com.cbruegg.mensaupbservice.api.Dish
-import com.cbruegg.mensaupbservice.api.DishesServiceResult
-import com.cbruegg.mensaupbservice.api.iso8601
+import com.cbruegg.mensaupbservice.api.*
 import com.squareup.moshi.Json
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.withTimeoutOrNull
@@ -14,6 +11,7 @@ import org.jetbrains.ktor.http.HttpStatusCode
 import java.io.IOException
 import java.util.*
 
+// Called by the controller
 suspend fun getDishes(apiId: String, restaurantId: String, date: Date): HttpResponseData {
   val result = downloadDishesAsync(restaurantId, date, apiId)
       .await()
@@ -22,7 +20,8 @@ suspend fun getDishes(apiId: String, restaurantId: String, date: Date): HttpResp
       }
 
   val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
-  return HttpResponseData(ContentType.parse("application/octet-stream"), if (result != null) ProtoBuf.dumps(result) else "", status)
+  val body = if (result != null) ProtoBuf.dumps(result) else ""
+  return HttpResponseData(ContentType.parse("application/octet-stream"), body, status)
 }
 
 
@@ -31,9 +30,15 @@ private fun downloadDishesAsync(restaurantId: String, date: Date, apiId: String)
     val request = Request.Builder().url(dishesUrl(restaurantId, date, apiId)).build()
     val response = httpClient.newCall(request).await()
     val jsonDishes = MoshiProvider.provideListJsonAdapter<JsonDish>().fromJson(response.body()!!.source())!!
-    jsonDishes.map { it.toDish() }
+    patchDishes(jsonDishes).map { it.toDish() }
   } ?: throw IOException("Network timeout!")
 }
+
+/**
+ * The Studierendenwerk API is broken. Dishes with "" as the category are from the day before
+ * and must be filtered out.
+ */
+private fun patchDishes(apiDishes: List<JsonDish>): List<JsonDish> = apiDishes.filter { it.category != "" }
 
 /**
  * Model representing a dish object returned by the API.
@@ -56,7 +61,7 @@ private data class JsonDish(
     @Json(name = "order_info") val orderInfo: Int,
     @Json(name = "badges") val badgesStrings: List<String>?,
     @Json(name = "restaurant") val restaurantId: String,
-    @Json(name = "pricetype") val priceType: PriceType,
+    @Json(name = "pricetype") val priceType: JsonPriceType,
     @Json(name = "image") val imageUrl: String?,
     @Json(name = "thumbnail") val thumbnailImageUrl: String?
 ) {
@@ -64,21 +69,21 @@ private data class JsonDish(
   val badges by lazy { badgesStrings?.mapNotNull { Badge.findById(it) } ?: emptyList() }
 
   fun toDish() = Dish(
-      iso8601.format(date), nameDE, nameEN,
+      iso8601Format.format(date), nameDE, nameEN,
       descriptionDE, descriptionEN, category, categoryDE, categoryEN,
       subcategoryDE, subcategoryEN, studentPrice, workerPrice, guestPrice, allergens, orderInfo,
       badges, restaurantId, priceType.toApiPriceType(), imageUrl, thumbnailImageUrl
   )
 }
 
-private enum class PriceType {
+private enum class JsonPriceType {
   @Json(name = "weighted")
   WEIGHTED,
   @Json(name = "fixed")
   FIXED;
 
   fun toApiPriceType() = when (this) {
-    PriceType.WEIGHTED -> com.cbruegg.mensaupbservice.api.PriceType.WEIGHTED
-    PriceType.FIXED -> com.cbruegg.mensaupbservice.api.PriceType.FIXED
+    JsonPriceType.WEIGHTED -> PriceType.WEIGHTED
+    JsonPriceType.FIXED -> PriceType.FIXED
   }
 }

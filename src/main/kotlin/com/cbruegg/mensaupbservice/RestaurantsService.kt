@@ -11,6 +11,7 @@ import org.jetbrains.ktor.http.ContentType
 import org.jetbrains.ktor.http.HttpStatusCode
 import java.io.IOException
 
+// Called by the controller
 suspend fun getRestaurants(apiId: String): HttpResponseData {
   val result = downloadRestaurantsAsync(apiId)
       .await()
@@ -19,7 +20,8 @@ suspend fun getRestaurants(apiId: String): HttpResponseData {
       }
 
   val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
-  return HttpResponseData(ContentType.parse("application/octet-stream"), if (result != null) ProtoBuf.dumps(result) else "", status)
+  val body = if (result != null) ProtoBuf.dumps(result) else ""
+  return HttpResponseData(ContentType.parse("application/octet-stream"), body, status)
 }
 
 /**
