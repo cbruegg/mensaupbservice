@@ -6,6 +6,7 @@ import java.util.*
 
 @Serializer(forClass = Date::class)
 object DateSerializer : KSerializer<Date> {
+
   override fun load(input: KInput): Date {
     return Date(input.readLongValue())
   }
