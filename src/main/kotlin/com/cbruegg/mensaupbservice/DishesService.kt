@@ -11,17 +11,19 @@ import okhttp3.Request
 import org.jetbrains.ktor.http.ContentType
 import org.jetbrains.ktor.http.HttpStatusCode
 import java.io.IOException
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 suspend fun getDishes(apiId: String, restaurantId: String, date: Date): HttpResponseData {
   val result = downloadDishesAsync(restaurantId, date, apiId)
       .await()
-      .fold({ DishesServiceResult(null) }) {
-        DishesServiceResult(DishesServiceResult.Success(it))
+      .fold({ null }) {
+        DishesServiceResult(it)
       }
 
-  val status = if (result.success != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
-  return HttpResponseData(ContentType.parse("application/octet-stream"), ProtoBuf.dumps(result), status)
+  val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
+  return HttpResponseData(ContentType.parse("application/octet-stream"), if (result != null) ProtoBuf.dumps(result) else "", status)
 }
 
 
@@ -33,6 +35,8 @@ private fun downloadDishesAsync(restaurantId: String, date: Date, apiId: String)
     jsonDishes.map { it.toDish() }
   } ?: throw IOException("Network timeout!")
 }
+
+private val dateFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME.withZone(ZoneId.of("UTC"))
 
 /**
  * Model representing a dish object returned by the API.
@@ -63,7 +67,8 @@ private data class JsonDish(
   val badges by lazy { badgesStrings?.mapNotNull { Badge.findById(it) } ?: emptyList() }
 
   fun toDish() = Dish(
-      date, nameDE, nameEN, descriptionDE, descriptionEN, category, categoryDE, categoryEN,
+      dateFormatter.format(date.toInstant()), nameDE, nameEN,
+      descriptionDE, descriptionEN, category, categoryDE, categoryEN,
       subcategoryDE, subcategoryEN, studentPrice, workerPrice, guestPrice, allergens, orderInfo,
       badges, restaurantId, priceType.toApiPriceType(), imageUrl, thumbnailImageUrl
   )

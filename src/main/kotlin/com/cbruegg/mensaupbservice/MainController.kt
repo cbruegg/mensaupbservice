@@ -1,7 +1,5 @@
 package com.cbruegg.mensaupbservice
 
-import com.cbruegg.mensaupbservice.api.DateSerializer
-import kotlinx.serialization.registerSerializer
 import org.jetbrains.ktor.application.ApplicationCall
 import org.jetbrains.ktor.host.embeddedServer
 import org.jetbrains.ktor.http.HttpStatusCode
@@ -10,11 +8,8 @@ import org.jetbrains.ktor.response.respondText
 import org.jetbrains.ktor.routing.get
 import org.jetbrains.ktor.routing.routing
 import java.text.SimpleDateFormat
-import java.util.*
 
 fun main(args: Array<String>) {
-  registerSerializer(Date::class.java.name, DateSerializer)
-
   embeddedServer(Netty, 50678) {
     routing {
       get("/restaurants") {

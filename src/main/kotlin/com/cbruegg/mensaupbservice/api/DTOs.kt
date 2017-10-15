@@ -3,16 +3,13 @@ package com.cbruegg.mensaupbservice.api
 import kotlinx.serialization.Optional
 import kotlinx.serialization.SerialId
 import kotlinx.serialization.Serializable
-import java.util.*
+import kotlinx.serialization.Transient
+import javax.xml.bind.DatatypeConverter
 
 @Serializable
 data class RestaurantsServiceResult(
-    @SerialId(1) val success: Success?
-) {
-  @Serializable data class Success(
-      @SerialId(1) @Optional val restaurants: List<Restaurant> = emptyList()
-  )
-}
+    @SerialId(1) @Optional val restaurants: List<Restaurant> = emptyList()
+)
 
 @Serializable
 data class Restaurant(
@@ -24,16 +21,12 @@ data class Restaurant(
 
 @Serializable
 data class DishesServiceResult(
-    @SerialId(1) val success: Success?
-) {
-  @Serializable data class Success(
-      @SerialId(1) @Optional val dishes: List<Dish> = emptyList()
-  )
-}
+    @SerialId(1) @Optional val dishes: List<Dish> = emptyList()
+)
 
 @Serializable
 data class Dish(
-    @SerialId(1) val date: Date,
+    @SerialId(1) private val dateStr: String,
     @SerialId(2) val nameDE: String,
     @SerialId(3) val nameEN: String,
     @SerialId(4) val descriptionDE: String?,
@@ -53,7 +46,10 @@ data class Dish(
     @SerialId(18) val priceType: PriceType,
     @SerialId(19) val imageUrl: String?,
     @SerialId(20) val thumbnailImageUrl: String?
-)
+) {
+  @Transient
+  val date by lazy { DatatypeConverter.parseDateTime(dateStr) }
+}
 
 enum class PriceType {
   WEIGHTED, FIXED

@@ -14,12 +14,12 @@ import java.io.IOException
 suspend fun getRestaurants(apiId: String): HttpResponseData {
   val result = downloadRestaurantsAsync(apiId)
       .await()
-      .fold({ RestaurantsServiceResult(null) }) {
-        RestaurantsServiceResult(RestaurantsServiceResult.Success(it))
+      .fold({ null }) {
+        RestaurantsServiceResult(it)
       }
 
-  val status = if (result.success != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
-  return HttpResponseData(ContentType.parse("application/octet-stream"), ProtoBuf.dumps(result), status)
+  val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
+  return HttpResponseData(ContentType.parse("application/octet-stream"), if (result != null) ProtoBuf.dumps(result) else "", status)
 }
 
 /**
