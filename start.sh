@@ -3,6 +3,6 @@
 DIR=/usr/local/java_apps/mensaupbservice
 
 cd $DIR
-
-sudo -u www-data nohup ./run.sh &> $DIR/server.log &
+./gradlew shadowJar
+sudo -u www-data nohup "java -jar build/libs/mensaupbservice-1.0-all.jar" &> $DIR/server.log &
 echo $! > $DIR/server.pid
