@@ -1,6 +1,9 @@
 package com.cbruegg.mensaupbservice
 
-import com.cbruegg.mensaupbservice.api.*
+import com.cbruegg.mensaupbservice.api.Badge
+import com.cbruegg.mensaupbservice.api.Dish
+import com.cbruegg.mensaupbservice.api.DishesServiceResult
+import com.cbruegg.mensaupbservice.api.PriceType
 import com.squareup.moshi.Json
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.withTimeoutOrNull
@@ -69,7 +72,7 @@ private data class JsonDish(
   val badges by lazy { badgesStrings?.mapNotNull { Badge.findById(it) } ?: emptyList() }
 
   fun toDish() = Dish(
-      iso8601Format.format(date), nameDE, nameEN,
+      date, nameDE, nameEN,
       descriptionDE, descriptionEN, category, categoryDE, categoryEN,
       subcategoryDE, subcategoryEN, studentPrice, workerPrice, guestPrice, allergens, orderInfo,
       badges, restaurantId, priceType.toApiPriceType(), imageUrl, thumbnailImageUrl
