@@ -41,7 +41,7 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:1.2.1"
     implementation 'com.squareup.okhttp3:okhttp:3.9.0'
 
-    implementation 'com.cbruegg.mensaupbservice-common:mensaupbservice-common:1.0.3'
+    implementation 'com.cbruegg.mensaupbservice-common:mensaupbservice-common:1.0.4'
 
     def moshiVersion = "1.5.0"
     implementation "com.squareup.moshi:moshi-parent:$moshiVersion"

@@ -4,7 +4,6 @@ import com.cbruegg.mensaupbservice.api.Restaurant
 import com.cbruegg.mensaupbservice.api.RestaurantsServiceResult
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.withTimeoutOrNull
-import kotlinx.serialization.protobuf.ProtoBuf
 import okhttp3.Request
 import okio.BufferedSource
 import org.jetbrains.ktor.http.ContentType
@@ -20,7 +19,7 @@ suspend fun getRestaurants(apiId: String): HttpResponseData {
       }
 
   val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
-  val body = if (result != null) ProtoBuf.dumps(result) else ""
+  val body = result?.serialize() ?: ""
   return HttpResponseData(ContentType.parse("application/octet-stream"), body, status)
 }
 

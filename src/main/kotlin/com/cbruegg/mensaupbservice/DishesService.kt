@@ -7,7 +7,6 @@ import com.cbruegg.mensaupbservice.api.PriceType
 import com.squareup.moshi.Json
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.withTimeoutOrNull
-import kotlinx.serialization.protobuf.ProtoBuf
 import okhttp3.Request
 import org.jetbrains.ktor.http.ContentType
 import org.jetbrains.ktor.http.HttpStatusCode
@@ -23,7 +22,7 @@ suspend fun getDishes(apiId: String, restaurantId: String, date: Date): HttpResp
       }
 
   val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
-  val body = if (result != null) ProtoBuf.dumps(result) else ""
+  val body = result?.serialize() ?: ""
   return HttpResponseData(ContentType.parse("application/octet-stream"), body, status)
 }
 
