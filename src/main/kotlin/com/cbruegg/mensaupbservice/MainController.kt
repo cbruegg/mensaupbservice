@@ -1,5 +1,6 @@
 package com.cbruegg.mensaupbservice
 
+import com.cbruegg.mensaupbservice.api.initMensaSerialization
 import org.jetbrains.ktor.application.ApplicationCall
 import org.jetbrains.ktor.host.embeddedServer
 import org.jetbrains.ktor.http.HttpStatusCode
@@ -10,6 +11,8 @@ import org.jetbrains.ktor.routing.routing
 import java.text.SimpleDateFormat
 
 fun main(args: Array<String>) {
+  initMensaSerialization()
+
   embeddedServer(Netty, 50678) {
     routing {
       get("/restaurants") {
