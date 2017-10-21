@@ -32,7 +32,8 @@ private fun downloadDishesAsync(restaurantId: String, date: Date, apiId: String)
   withTimeoutOrNull(TIMEOUT_MS) {
     val request = Request.Builder().url(dishesUrl(restaurantId, date, apiId)).build()
     val response = httpClient.newCall(request).await()
-    val jsonDishes = MoshiProvider.provideListJsonAdapter<JsonDish>().fromJson(response.body()!!.source())!!
+    val adapter = MoshiProvider.provideListJsonAdapter<JsonDish>()
+    val jsonDishes = response.body()!!.source().use { adapter.fromJson(it)!! }
     patchDishes(jsonDishes).map { it.toDish() }
   } ?: throw IOException("Network timeout!")
 }

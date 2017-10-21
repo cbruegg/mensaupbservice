@@ -29,7 +29,7 @@ suspend fun getRestaurants(apiId: String): HttpResponseData {
  */
 private fun parseRestaurantsFromApi(restaurantListSource: BufferedSource): List<Restaurant> {
   val moshi = MoshiProvider.provideJsonAdapter<Map<String, Map<String, *>>>()
-  val deserialized = moshi.fromJson(restaurantListSource)
+  val deserialized = restaurantListSource.use { moshi.fromJson(it) }
   return deserialized!!.map {
     Restaurant(it.key, it.value["name"] as String, it.value["location"] as String, it.value["active"] as Boolean)
   }
