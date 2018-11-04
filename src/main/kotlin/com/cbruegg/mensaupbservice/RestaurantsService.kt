@@ -12,35 +12,37 @@ import java.io.IOException
 
 // Called by the controller
 suspend fun getRestaurants(apiId: String): HttpResponseData {
-  val result = downloadRestaurantsAsync(apiId)
-      .await()
-      .fold({ null }) {
-        RestaurantsServiceResult(it)
-      }
+    val result = downloadRestaurantsAsync(apiId)
+        .await()
+        .fold({ null }) {
+            RestaurantsServiceResult(it)
+        }
 
-  val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
-  val body = result?.serialize() ?: ""
-  return HttpResponseData(ContentType.parse("application/octet-stream"), body, status)
+    val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
+    val body = result?.let { it.copy(patchRestaurants(it.restaurants)) }?.serialize() ?: ""
+    return HttpResponseData(ContentType.parse("application/octet-stream"), body, status)
 }
 
 /**
  * Parse restaurants from the API response.
  */
 private fun parseRestaurantsFromApi(restaurantListSource: BufferedSource): List<Restaurant> {
-  val moshi = MoshiProvider.provideJsonAdapter<Map<String, Map<String, *>>>()
-  val deserialized = restaurantListSource.use { moshi.fromJson(it) }
-  return deserialized!!.map {
-    Restaurant(it.key, it.value["name"] as String, it.value["location"] as String, it.value["active"] as Boolean)
-  }
+    val moshi = MoshiProvider.provideJsonAdapter<Map<String, Map<String, *>>>()
+    val deserialized = restaurantListSource.use { moshi.fromJson(it) }
+    return deserialized!!.map {
+        Restaurant(it.key, it.value["name"] as String, it.value["location"] as String, it.value["active"] as Boolean)
+    }
 }
 
 private fun downloadRestaurantsAsync(apiId: String): Deferred<IOEither<List<Restaurant>>> = networkAsync {
-  withTimeoutOrNull(TIMEOUT_MS) {
-    val request = Request.Builder().url(restaurantsUrl(apiId)).build()
-    val response = httpClient.newCall(request).await()
-    parseRestaurantsFromApi(response.body()!!.source())
-  } ?: throw IOException("Network timeout!")
+    withTimeoutOrNull(TIMEOUT_MS) {
+        val request = Request.Builder().url(restaurantsUrl(apiId)).build()
+        val response = httpClient.newCall(request).await()
+        parseRestaurantsFromApi(response.body()!!.source())
+    } ?: throw IOException("Network timeout!")
 }
 
+private fun patchRestaurants(apiRestaurants: List<Restaurant>) =
+    apiRestaurants.filter { it.id != "one-way-snack" } // Doesn't exist anymore
 
 

@@ -15,33 +15,34 @@ import java.util.*
 
 // Called by the controller
 suspend fun getDishes(apiId: String, restaurantId: String, date: Date): HttpResponseData {
-  val result = downloadDishesAsync(restaurantId, date, apiId)
-      .await()
-      .fold({ null }) {
-        DishesServiceResult(it)
-      }
+    val result = downloadDishesAsync(restaurantId, date, apiId)
+        .await()
+        .fold({ null }) {
+            DishesServiceResult(it)
+        }
 
-  val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
-  val body = result?.serialize() ?: ""
-  return HttpResponseData(ContentType.parse("application/octet-stream"), body, status)
+    val status = if (result != null) HttpStatusCode.OK else HttpStatusCode.BadGateway
+    val body = result?.serialize() ?: ""
+    return HttpResponseData(ContentType.parse("application/octet-stream"), body, status)
 }
 
 
 private fun downloadDishesAsync(restaurantId: String, date: Date, apiId: String): Deferred<IOEither<List<Dish>>> = networkAsync {
-  withTimeoutOrNull(TIMEOUT_MS) {
-    val request = Request.Builder().url(dishesUrl(restaurantId, date, apiId)).build()
-    val response = httpClient.newCall(request).await()
-    val adapter = MoshiProvider.provideListJsonAdapter<JsonDish>()
-    val jsonDishes = response.body()!!.source().use { adapter.fromJson(it)!! }
-    patchDishes(jsonDishes).map { it.toDish() }
-  } ?: throw IOException("Network timeout!")
+    withTimeoutOrNull(TIMEOUT_MS) {
+        val request = Request.Builder().url(dishesUrl(restaurantId, date, apiId)).build()
+        val response = httpClient.newCall(request).await()
+        val adapter = MoshiProvider.provideListJsonAdapter<JsonDish>()
+        val jsonDishes = response.body()!!.source().use { adapter.fromJson(it)!! }
+        patchDishes(jsonDishes).map { it.toDish() }
+    } ?: throw IOException("Network timeout!")
 }
 
 /**
- * The Studierendenwerk API is broken. Dishes with "" as the category are from the day before
+ * The Studierendenwerk API is broken. Dishes with "" as the category in Mensa Academica are from the day before
  * and must be filtered out.
  */
-private fun patchDishes(apiDishes: List<JsonDish>): List<JsonDish> = apiDishes.filter { it.category != "" }
+private fun patchDishes(apiDishes: List<JsonDish>): List<JsonDish> =
+    apiDishes.filterNot { it.restaurantId == "mensa-academica-paderborn" && it.category.isEmpty() }
 
 /**
  * Model representing a dish object returned by the API.
@@ -68,25 +69,25 @@ private data class JsonDish(
     @Json(name = "image") val imageUrl: String?,
     @Json(name = "thumbnail") val thumbnailImageUrl: String?
 ) {
-  @delegate:Transient
-  val badges by lazy { badgesStrings?.mapNotNull { Badge.findById(it) } ?: emptyList() }
+    @delegate:Transient
+    val badges by lazy { badgesStrings?.mapNotNull { Badge.findById(it) } ?: emptyList() }
 
-  fun toDish() = Dish(
-      date, nameDE, nameEN,
-      descriptionDE, descriptionEN, category, categoryDE, categoryEN,
-      subcategoryDE, subcategoryEN, studentPrice, workerPrice, guestPrice, allergens, orderInfo,
-      badges, restaurantId, priceType.toApiPriceType(), imageUrl, thumbnailImageUrl
-  )
+    fun toDish() = Dish(
+        date, nameDE, nameEN,
+        descriptionDE, descriptionEN, category, categoryDE, categoryEN,
+        subcategoryDE, subcategoryEN, studentPrice, workerPrice, guestPrice, allergens, orderInfo,
+        badges, restaurantId, priceType.toApiPriceType(), imageUrl, thumbnailImageUrl
+    )
 }
 
 private enum class JsonPriceType {
-  @Json(name = "weighted")
-  WEIGHTED,
-  @Json(name = "fixed")
-  FIXED;
+    @Json(name = "weighted")
+    WEIGHTED,
+    @Json(name = "fixed")
+    FIXED;
 
-  fun toApiPriceType() = when (this) {
-    JsonPriceType.WEIGHTED -> PriceType.WEIGHTED
-    JsonPriceType.FIXED -> PriceType.FIXED
-  }
+    fun toApiPriceType() = when (this) {
+        JsonPriceType.WEIGHTED -> PriceType.WEIGHTED
+        JsonPriceType.FIXED -> PriceType.FIXED
+    }
 }
