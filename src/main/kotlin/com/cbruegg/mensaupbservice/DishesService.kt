@@ -47,7 +47,7 @@ private fun patchDishes(apiDishes: List<JsonDish>): List<JsonDish> =
 /**
  * Model representing a dish object returned by the API.
  */
-private data class JsonDish(
+data class JsonDish(
     @Json(name = "date") val date: Date,
     @Json(name = "name_de") val nameDE: String,
     @Json(name = "name_en") val nameEN: String,
@@ -80,7 +80,7 @@ private data class JsonDish(
     )
 }
 
-private enum class JsonPriceType {
+enum class JsonPriceType {
     @Json(name = "weighted")
     WEIGHTED,
     @Json(name = "fixed")
